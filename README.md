@@ -1,6 +1,6 @@
-###Ghost
+#Ghost
 
-#### Description
+## Description
 GHOST is a distance learning technique defined in [Battistella 2022](https://hal.archives-ouvertes.fr/hal-03563705/).
 It relies on conditional random fields and graph properties to estimate the best distance metric for a given classification task.
 This distance can then be leveraged through an adapted K-Nearest Neighbors (K-NN) approach to predict a
@@ -17,7 +17,7 @@ The second order graph property leveraged is the shortest path.
 The higher-order graph properties leveraged are the shortest path, the clique order, the eccentricity and
 the connectivity.
 
-#### Use
+## Use
 The structure of both the second-order and the higher-order implementations are similar, they both include 
 the files 'classify.py' and 'distance_learning.py'. The higher-order method also uses a 'graph.py' file to define the
 graph notion to be used and the diverse functions to compute the needed graph properties and graph operations.
