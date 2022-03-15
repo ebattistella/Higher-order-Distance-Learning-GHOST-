@@ -1,4 +1,4 @@
-#Ghost
+# GHOST
 
 ## Description
 GHOST is a distance learning technique defined in [Battistella 2022](https://hal.archives-ouvertes.fr/hal-03563705/).
