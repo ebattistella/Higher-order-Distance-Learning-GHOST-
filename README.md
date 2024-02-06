@@ -24,7 +24,10 @@ graph notion to be used and the diverse functions to compute the needed graph pr
 We describe next the files and functions for the higher-order case, the second-order case being built on the 
 same template less the higher-order specific parameters.
 
-- 'distance_learning.py': it provides in the main function an example on how to use the learn function to obtain the
+To reproduce the article experiment on synthetic dataset you can call for instance:
+python distance_learning_higher_order.py 100 20 3 30 0.1 2 [output_path]
+
+- 'distance_learning_higher_order.py': it provides in the main function an example on how to use the learn function to obtain the
 higher-order metric and how to use it for classification. Only the 'learn' function is meant to be called, its 
 parameters are:
   - clustering_list: ground-truth, list of labels for the samples for the K training sets
@@ -35,8 +38,8 @@ parameters are:
   - alpha, beta, tau: coefficients of the constraints and of the regularization, to be tuned
   - speed: coefficient influencing the speed of convergence, weight the updates
   - update_name: name of the projection to be update at each iteration, in the higher-order case, the weights need to be positive
-  - nn_numbers: size of the neighborhood to consider when buildind graphs based on the neighborhood
-  - order: order to consider for the higher- order
+  - nn_numbers: size of the neighborhood to consider when building graphs based on the neighborhood
+  - order: order to consider for the higher-order
   - cpu_nb_slaves: number of cpus for available for parallelization
   - regu: name of the regularization method, implemented methods are "lasso", "ridge" and "elasticnet"
   - init: possible pre-initialization of the weights for the second- order metrics (e.g. by first applying the second- order framework), empty list for no initialization

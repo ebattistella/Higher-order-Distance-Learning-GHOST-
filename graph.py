@@ -1,21 +1,21 @@
 # -*- coding: utf-8 -*-
-
 import numpy as np
 from scipy.sparse import csr_matrix
-from networkx.algorithms.shortest_paths.dense import floyd_warshall
-from networkx.convert_matrix import from_scipy_sparse_matrix
-from networkx.algorithms.clique import graph_clique_number
+from networkx.algorithms.shortest_paths import all_pairs_shortest_path_length
+from networkx.convert_matrix import from_scipy_sparse_array
+from networkx.algorithms.approximation import max_clique
 from networkx.algorithms.connectivity.connectivity import node_connectivity
 import networkx.algorithms.distance_measures
 import networkx.algorithms.centrality
-
+import networkx as nx
 
 class Graph:
     def __init__(self, matrix):
         sparse_matrix = csr_matrix(matrix)
-        self.graph = from_scipy_sparse_matrix(sparse_matrix)
-        self.max_degree = max([self.graph.degree[i] for i in list(self.graph)])
-        self.paths = []
+        self.graph = from_scipy_sparse_array(sparse_matrix)
+        self.max_degree = max([val for (_, val) in self.graph.degree()])
+        self.paths = {}
+        self.max_path = 0
 
     #Define a graph from a matrix of distance using a K-nearest neighbors approach
     @classmethod
@@ -33,31 +33,39 @@ class Graph:
         sparse_matrix = csr_matrix(adjacency)
         return cls(sparse_matrix)
 
+
     #Add a sample to an adjacency matrix depending on its ground truth with noise in proportion proba
-    #It will be used for the construction of a graph for classification in the provided example
-    @classmethod
-    def add_node(cls, adjacency, ground, sizes, proba):
-        edges = np.array([int((np.random.rand() - proba >= 0) == (ground == k)) for k in sizes])
-        aux = np.concatenate((np.concatenate((adjacency, edges.reshape(1, -1)), axis=0),
-                              np.array(list(edges) + [0]).reshape(-1, 1)), axis=1)
-        sparse_matrix = csr_matrix(aux)
-        return cls(sparse_matrix)
+    #It will be used for the construction of a graph for classification in the provided synthetic example
+    def add_node(self, ground, sample, proba, num_nodes):
+        # If (np.random.rand() - proba >= 0) we drew a number higher than the probability so the edge isn't rnadom
+        # meaning that if the ground truth of the training and test samples agree there is an edge, otherwise no edge
+        # It is the opposite if (np.random.rand() - proba < 0)
+        edges = np.array([int((np.random.rand() - proba >= 0) == (ground[sample] == ground[k])) for k in range(num_nodes)])
+        adjacent = [node for node,edge in enumerate(edges) if edge>0]
+        for k in adjacent:
+            self.graph.add_edge(k, sample)
+        if len(adjacent) > self.max_degree:
+            self.max_degree = len(adjacent)
+        self.paths[sample] = {sample:0}
+        for j in range(num_nodes):
+            if j in adjacent:
+                self.paths[sample][j] = self.paths[j][sample] = 1
+            else:
+                self.paths[sample][j] = self.paths[j][sample] = min(self.max_path, 1 + min([self.paths[k][j] for k in adjacent]))
 
     #Compute the path length between any pair of nodes
     #In case of a disconnected graph set the infinite values to max_path (needed for the metrics computation)
     def path_finding(self, max_path):
-        self.paths = floyd_warshall(self.graph)
-        for i in list(self.paths):
-            self.paths[i] = dict(self.paths[i])
-            for j in list(self.paths[i]):
-                self.paths[i][j] = max_path if self.paths[i][j] == np.inf else self.paths[i][j]
+        self.max_path = max_path
+        self.paths = dict(all_pairs_shortest_path_length(self.graph, cutoff=max_path))
+
 
     #Compute the clique order metric defined as max_degree - clique_order
     #It is computed for the nodes in indexes + center
     def clique_order(self, indexes, center):
         indexes.append(center)
         aux = self.graph.subgraph(indexes)
-        return self.max_degree - graph_clique_number(aux)
+        return self.max_degree - len(max_clique(aux))
 
     #Compute the eccentricity with center center in the subgraph defined by the nodes in indexes + center
     def eccentricity(self, indexes, center):
